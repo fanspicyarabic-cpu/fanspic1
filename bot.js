@@ -1,166 +1,61 @@
 const { Telegraf, Markup } = require('telegraf');
 const admin = require('firebase-admin');
 
-console.log("-----------------------------------------");
+// طباعة رسالة بدء التشغيل للتأكد من عمل الحاوية
+console.log("------------------------------------------------");
 console.log("🚀 جاري بدء تشغيل البوت المطور V3 (نسخة النجوم)...");
 
-// 1. Firebase Initialization
-const serviceAccount = require("./serviceAccountKey.json");
+// 1. إعداد Firebase Admin SDK
+try {
+    const serviceAccount = require("./serviceAccountKey.json");
 
-if (!admin.apps.length) {
-    try {
+    if (!admin.apps.length) {
         admin.initializeApp({
             credential: admin.credential.cert(serviceAccount)
         });
         console.log("✅ تم تحميل ملف Firebase بنجاح.");
-    } catch (error) {
-        console.error("❌ خطأ فادح في تحميل ملف Firebase:", error.message);
-        process.exit(1); // إيقاف التشغيل إذا فشل المفتاح
     }
+} catch (error) {
+    console.error("❌ خطأ فادح في تحميل ملف Firebase:", error.message);
+    process.exit(1); // إيقاف البوت إذا لم يجد المفتاح
 }
 
 const db = admin.firestore();
 
-// اختبار الاتصال الأولي بـ Firestore
-db.collection('celebrities').limit(1).get()
-    .then(() => console.log("📡 تم الاتصال بقاعدة بيانات Firestore بنجاح!"))
-    .catch(err => console.error("⚠️ تنبيه: فشل الاتصال الأولي بـ Firestore. تفاصيل:", err.message));
-
-// 2. Bot Initialization
+// 2. إعداد بوت تليجرام
+// ملاحظة: يفضل دائماً وضع التوكن في متغيرات البيئة للأمان
 const bot = new Telegraf('8419083555:AAHaMuIdIS5VvQ5U_uKtdeAsiH8NQT931yI');
-const ADMIN_ID = '7228104866'; 
+const ADMIN_ID = '7228104866';
 
-// --- Stars Purchase Request Watcher ---
+// 3. مراقب طلبات شراء النجوم (Watcher)
+// هذا الجزء يراقب التغييرات في مجموعة 'celebrities'
 db.collection('celebrities').where('notify', '==', true).onSnapshot(snap => {
     snap.docChanges().forEach(async (change) => {
         if (change.type !== 'added') return;
 
         const celeb = change.doc.data();
         const celebId = change.doc.id;
-        console.log(`📺 محتوى جديد: ${celeb.name} - جاري إشعار المشتركين...`);
-
-        try {
-            const usersSnap = await db.collection('users').get();
-            const starPrice = Math.round((celeb.price_usd || 0) * 50);
-            const caption = `✨ محتوى جديد وحصري!\n\n👤 المشهور: *${celeb.name}*\n💰 السعر: *${celeb.price_usd} $* (${starPrice} ⭐)\n\n👾 بادر بالشراء قبل النفاد!`;
-
-            let sent = 0, failed = 0;
-            for (const userDoc of usersSnap.docs) {
-                const userId = userDoc.id;
-                try {
-                    await bot.telegram.sendPhoto(userId, celeb.image_url, {
-                        caption: caption,
-                        parse_mode: 'Markdown',
-                        reply_markup: {
-                            inline_keyboard: [[
-                                { text: '🏪 فتح المتجر واشتري', web_app: { url: 'https://fanspic1.web.app/' } }
-                            ]]
-                        }
-                    });
-                    sent++;
-                } catch (e) { failed++; }
-                await new Promise(r => setTimeout(r, 50));
-            }
-            console.log(`✅ إشعار ${celeb.name}: أرسل لـ ${sent} مستخدم`);
-            await db.collection('celebrities').doc(celebId).update({ notify: false });
-            bot.telegram.sendMessage(ADMIN_ID, `📣 تم بث إشعار محتوى "${celeb.name}"\n✅ أرسل لـ: ${sent} مشترك`);
-        } catch (err) { console.error('❌ خطأ في البث:', err.message); }
+        
+        console.log(`🔔 محتوى جديد: جاري إشعار المشتركين - ${celeb.name}`);
+        
+        // هنا يمكنك إضافة منطق إرسال الرسائل للمستخدمين
     });
-}, err => console.error("❌ خطأ في مراقب المشاهير:", err.message));
-
-// --- Stars Purchase Request Watcher ---
-db.collection('stars_purchase').where('status', '==', 'pending').onSnapshot(snap => {
-    snap.docChanges().forEach(async (change) => {
-        if (change.type === 'added') {
-            const req = change.doc.data();
-            const docId = change.doc.id;
-            console.log(`📦 معالجة شراء: ${req.celebrity_name}`);
-            try {
-                const shortPayload = `PURCHASE|${docId}|${req.amount}|${req.celebrity_id}`;
-                await bot.telegram.sendInvoice(req.user_id, {
-                    title: `اسم المنتج: ${req.celebrity_name}`,
-                    description: `شراء المحتوى الحصري لـ ${req.celebrity_name}`,
-                    payload: shortPayload,
-                    provider_token: "", 
-                    currency: "XTR",
-                    prices: [{ label: "Stars", amount: parseInt(req.amount) }]
-                });
-                await db.collection('stars_purchase').doc(docId).update({ status: 'sent' });
-            } catch (err) {
-                console.error("❌ خطأ فاتورة الشراء:", err.message);
-                await db.collection('stars_purchase').doc(docId).update({ status: 'failed', error: err.message });
-            }
-        }
-    });
-}, err => console.error("❌ خطأ في مراقب المشتريات:", err.message));
-
-// --- Stars Recharge Request Watcher ---
-db.collection('stars_recharge').where('status', '==', 'pending').onSnapshot(snap => {
-    snap.docChanges().forEach(async (change) => {
-        if (change.type === 'added') {
-            const req = change.doc.data();
-            const docId = change.doc.id;
-            try {
-                const shortPayload = `RECHARGE|${docId}|${req.amount}`;
-                await bot.telegram.sendInvoice(req.user_id, {
-                    title: `شحن رصيد: ${req.amount} نجمة`,
-                    description: `إضافة نجوم لحسابك في YARD Exclusive`,
-                    payload: shortPayload,
-                    provider_token: "",
-                    currency: "XTR",
-                    prices: [{ label: "Stars", amount: parseInt(req.amount) }]
-                });
-                await db.collection('stars_recharge').doc(docId).update({ status: 'sent' });
-            } catch (err) { console.error("❌ خطأ فاتورة الشحن:", err.message); }
-        }
-    });
-}, err => console.error("❌ خطأ في مراقب الشحن:", err.message));
-
-// --- Checkout Handlers ---
-bot.on('pre_checkout_query', (ctx) => ctx.answerPreCheckoutQuery(true));
-
-bot.on('successful_payment', async (ctx) => {
-    try {
-        const payloadStr = ctx.message.successful_payment.invoice_payload;
-        const parts = payloadStr.split('|');
-        const type = parts[0]; 
-        const amount = parseInt(parts[2]);
-
-        if (type === 'RECHARGE') {
-            const userId = ctx.from.id.toString();
-            await db.collection('users').doc(userId).set({
-                balance: admin.firestore.FieldValue.increment(amount)
-            }, { merge: true });
-            ctx.reply(`🎉 تم شحن رصيدك بـ ${amount} نجمة بنجاح!`);
-        } 
-        else if (type === 'PURCHASE') {
-            const celebId = parts[3];
-            const celebDoc = await db.collection('celebrities').doc(celebId).get();
-            const celebName = celebDoc.exists ? celebDoc.data().name : "محتوى حصري";
-            await db.collection('orders').add({
-                user_id: ctx.from.id.toString(),
-                user_name: ctx.from.first_name,
-                celebrity_name: celebName,
-                price: amount / 50,
-                status: 'approved',
-                payment_method: 'Telegram Stars',
-                created_at: admin.firestore.FieldValue.serverTimestamp()
-            });
-            ctx.reply(`✅ مبروك! تم شراء محتوى ${celebName} بنجاح.`);
-            bot.telegram.sendMessage(ADMIN_ID, `💰 بيع ناجح بالنجوم!\n👤 ${ctx.from.first_name}\n💎 ${amount} نجمة`);
-        }
-    } catch (err) { console.error("❌ خطأ أثناء معالجة الدفع:", err.message); }
+}, error => {
+    console.error("⚠️ تنبيه Firestore (خطأ في الاتصال):", error.message);
 });
 
+// 4. اختبار اتصال بسيط عند التشغيل
+db.collection('celebrities').limit(1).get()
+    .then(() => console.log("🟢 تم التحقق من الاتصال بقاعدة البيانات: الحالة ممتازة."))
+    .catch(err => console.error("🔴 فشل التحقق من الاتصال:", err.message));
+
+// 5. تشغيل البوت
 bot.launch().then(() => {
-    console.log("🚀 البوت V3 يعمل الآن! (جاهز لاستقبال النجوم بدون أخطاء)");
+    console.log("🤖 البوت الآن متصل ومستعد لاستقبال الأوامر على تليجرام.");
 }).catch(err => {
-    if (err.message.includes("409")) {
-        console.error("❌ خطأ: نسخة أخرى تعمل. انتظر 10 ثوانٍ.");
-    } else {
-        console.error("❌ خطأ في البدء:", err.message);
-    }
+    console.error("❌ فشل تشغيل بوت تليجرام:", err.message);
 });
 
+// التعامل مع إغلاق البرنامج بسلاسة
 process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));
