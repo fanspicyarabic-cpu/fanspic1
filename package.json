@@ -1,7 +1,13 @@
-var admin = require("firebase-admin");
-
-var serviceAccount = require("path/to/serviceAccountKey.json");
-
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
-});
+{
+  "type": "service_account",
+  "project_id": "fanspic1",
+  "private_key_id": "0c9d0b12a6fa8239ef36ff6d4ec0d1c9269be06f",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDPl/nTuX0xVC9g\nNU9Dd+OUkF22jbHAkl+N6NbUtRPijIUo2f0Q8zAo2TZeg+KeKh4A6LIq5T0t5wmd\nCpmFY4KSTCslswuq3KmmPgw2Za0eF0g0fCJA621AVjMXJzDjvfr2DSs+8cojASjG\ndNioShgCw8A+yVYkXQ8W+6aPJsuubr0FoNeRZrM1pwyw/Re68IkM0Mvh57D/cLQG\nlArRmFH5YENAivaEBpkr5DE515A6VUR3eqq7Sb1BJd1MMlDt75S4dtr3wthiL30Y\nckuZ+HbbQSX5LS0eJ2htvfuneBhkHU1EJpBMdpVSR2UmUrHoHSSaDyBCiQl4yHok\nc9l+wbOZAgMBAAECggEAJGJoJJ5BnYg6R3wAePxF1I+bBTh/e5eMDOTO5ngYVKA5\nZIgUbUiaW8Z6W4V1DjCmkpU2SQNlvipcynwFnVXsGDUmaNShSmCjkWIVpOEcPwZo\nnt5U6Jj6zIhvKvMxA/GTz1VOi5k4SvtUiLgJEzHtVGq3wqlqIjR3RRl1P2jW0SsB\nZNUdaM4dH8+H3rGtrRqVjFlM2T+lHB38Z75OQjzwc3ED1Ko3/7v3H5F7HGwOZTwJ\nQRdBlT1gWEjlEGw18AhPIzlu1V2qR43GGa14YQ6tRfje/D/IKsz3yzcdLdwcRfBF\n/3G1Pa/uta4HNltcMQz0lj6CVhOYI85KD8mmx0NO8wKBgQD9dXVa6yBlKAgjiZ1T\n3UQOzD5vEze2fbI2A5AC/JqRpwAO31/bAqPGOKHkjzfGSoRhTnsGu+hdcdjOnoXU\npnd5OMgM1v0RgokGiwE11sqQ57fQRgbI+41TxvEaytvR8fkJ1Ceq4a/N+uufJUBV\nufbWMLLzraW8SSk42puEwEp91wKBgQDRrMwgXzCLDfObzTjSR4JRd+zJqtPlsi7O\npvzmEPBdGkH/5pau7I3UfL7QKYL8pPpGTRp1jS65n3e6rsJ8Ypv5f8gT0BrMc5+y\nD1ntcc7ev9DxppAfaUg9lrjmgD8cx3dtzN9PsfUX6uHX78lYwAPWGgnSX3epVYAf\nfQt0vSvMDwKBgBi/YkEJWjVmTj0iD7GDlkSXnrT7vGHeLgtmF6ajAXidRL0vBE3/\nGPyexPfrH/gFiJ1zq0GCEXMmTZQHGGwmAN5eM/JE/5q5EyYHZovaOBcj+OemHr17\nClaWwy3phsMeDEHwbBscRC0phd4ZJgn4yWgqgx6V4uvafOLnPW4d1GgrAoGBAIhz\npdwjVpoIGFN6eNIQC3UtUIHllETVcrS147ttpp9QaUc6LzHjbGGuVRdvDHmSe/Wo\nU+HQYWoXp3lsJdGA8vSp/fE261nGnVTpvKJUAEbiGf5JYV2vzH2YSvhm2avG+6gP\nPfzFWTWZfCRlPmltfJGnHGE2E8+1fs3/OKdePNRtAoGAYiRLAiRLHsHOQ69hudGt\n3FTUpqljFD5aXcNLUY8phNJD+H1npIl/16iXpXYshSMKvUvzTx2KiN1hLbgLns+k\nxxU8/AEBXrWsOI+qw5cR0NNto1Sg0rJ9pAXuugAdBfhJ8bY5HHHCnZ5SMO1cGazx\nOSxpXDSLK3YXFtwJd9xWHBM=\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-fbsvc@fanspic1.iam.gserviceaccount.com",
+  "client_id": "100532226424713058364",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40fanspic1.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
