@@ -1,0 +1,4 @@
+services:
+  my-bot-service:
+    build: .
+    restart: always
