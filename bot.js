@@ -1,60 +1,39 @@
-const { Telegraf, Markup } = require('telegraf');
+const { Telegraf } = require('telegraf');
 const admin = require('firebase-admin');
-const path = require('path'); // إضافة مكتبة المسارات
 
-// طباعة رسالة بدء التشغيل للتأكد من عمل الحاوية
-console.log("------------------------------------------------");
-console.log("🚀 جاري بدء تشغيل البوت المطور V3 (نسخة النجوم)...");
+// طباعة رسالة بدء التشغيل في السجلات
+console.log("🚀 جاري بدء تشغيل البوت... (الخطة المجانية)");
 
-// 1. إعداد Firebase Admin SDK
+// 1. تهيئة Firebase مع معالجة الأخطاء
 try {
-    // استخدام path.join و __dirname لضمان الوصول للملف بشكل صحيح
-    const serviceAccountPath = path.join(__dirname, 'serviceAccountKey.json');
-    const serviceAccount = require(serviceAccountPath);
-
+    const serviceAccount = require("./serviceAccountKey.json");
     if (!admin.apps.length) {
         admin.initializeApp({
             credential: admin.credential.cert(serviceAccount)
         });
-        console.log("✅ تم تحميل ملف Firebase بنجاح من المسار: " + serviceAccountPath);
+        console.log("✅ تم تحميل ملف الهوية بنجاح.");
     }
 } catch (error) {
-    console.error("❌ خطأ فادح في تحميل ملف Firebase:");
-    console.error("- تأكد من وجود ملف باسم 'serviceAccountKey.json' في نفس مجلد bot.js");
-    console.error("- رسالة الخطأ:", error.message);
-    process.exit(1); 
+    console.error("❌ فشل تحميل ملف serviceAccountKey.json. تأكد من رفعه بشكل صحيح:", error.message);
+    // لا نوقف البرنامج هنا لكي لا تظهر حالة 'موقوف' فوراً
 }
 
 const db = admin.firestore();
-
-// 2. إعداد بوت تليجرام
 const bot = new Telegraf('8419083555:AAHaMuIdIS5VvQ5U_uKtdeAsiH8NQT931yI');
-const ADMIN_ID = '7228104866';
 
-// 3. مراقب طلبات شراء النجوم (Watcher)
-db.collection('celebrities').where('notify', '==', true).onSnapshot(snap => {
-    snap.docChanges().forEach(async (change) => {
-        if (change.type !== 'added') return;
+// 2. أمر بسيط للتأكد من عمل البوت
+bot.start((ctx) => ctx.reply('البوت يعمل الآن ومربوط بـ Firebase! 🌟'));
 
-        const celeb = change.doc.data();
-        console.log(`🔔 محتوى جديد: جاري إشعار المشتركين - ${celeb.name}`);
-    });
-}, error => {
-    console.error("⚠️ تنبيه Firestore (خطأ في الاتصال):", error.message);
-});
-
-// 4. اختبار اتصال بسيط عند التشغيل
+// 3. اختبار الاتصال بـ Firestore (دون إيقاف البوت عند الفشل)
 db.collection('celebrities').limit(1).get()
-    .then(() => console.log("🟢 تم التحقق من الاتصال بقاعدة البيانات: الحالة ممتازة."))
-    .catch(err => console.error("🔴 فشل التحقق من الاتصال:", err.message));
+    .then(() => console.log("🟢 الاتصال بـ Firestore مستقر."))
+    .catch(err => console.error("🔴 تنبيه: لا يمكن الوصول لـ Firestore حالياً:", err.message));
 
-// 5. تشغيل البوت
-bot.launch().then(() => {
-    console.log("🤖 البوت الآن متصل ومستعد لاستقبال الأوامر على تليجرام.");
-}).catch(err => {
-    console.error("❌ فشل تشغيل بوت تليجرام:", err.message);
-});
+// 4. تشغيل البوت
+bot.launch()
+    .then(() => console.log("🤖 البوت مستعد لاستقبال الرسائل."))
+    .catch(err => console.error("❌ فشل تشغيل Telegraf:", err.message));
 
-// التعامل مع إغلاق البرنامج بسلاسة
+// الحفاظ على تشغيل الحاوية
 process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));
